@@ -30,4 +30,5 @@ config={
 content = st_jodit(config)
 st.write(content)
 ```
-By default code will pass readonly:false to the component. List of options for config is available at https://xdsoft.net/jodit/docs/options.html
+By default code will pass **readonly:false** to config. 
+List of options for config is available at https://xdsoft.net/jodit/docs/options.html
