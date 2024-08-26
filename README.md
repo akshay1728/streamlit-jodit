@@ -3,6 +3,8 @@
 Streamlit component that allows you to use Jodit HTML editor in streamlit. Jodit is a open source rich text editor
 https://xdsoft.net/jodit/
 
+This component is based on react wrapper - https://github.com/jodit/jodit-react 
+
 ## Installation instructions
 
 ```sh
