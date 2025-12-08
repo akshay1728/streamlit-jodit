@@ -1,0 +1,4 @@
+pandas
+faker
+python-dateutil
+streamlit==1.51.0
