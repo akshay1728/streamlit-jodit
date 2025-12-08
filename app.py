@@ -47,9 +47,16 @@ def main():
                 choices_str = st.text_area("Choices (comma-separated)", ", ".join(options.get('choices', [])), key=f"choices_{i}")
                 options['choices'] = [c.strip() for c in choices_str.split(',')]
             elif col['type'] == 'contextual_text':
-                options['context_column'] = st.selectbox("Context Column", [c['name'] for c in st.session_state.columns if c is not col], key=f"context_{i}")
-                templates_str = st.text_area("Templates (JSON)", json.dumps(options.get('templates', {})), key=f"templates_{i}")
-                options['templates'] = json.loads(templates_str)
+                available_context_cols = [c['name'] for c in st.session_state.columns if c is not col]
+                if not available_context_cols:
+                    st.warning("You must define at least one other column to use as a context.")
+                else:
+                    options['context_column'] = st.selectbox("Context Column", available_context_cols, key=f"context_{i}")
+                    templates_str = st.text_area("Templates (JSON format)", json.dumps(options.get('templates', {}), indent=2), height=150, key=f"templates_{i}")
+                    try:
+                        options['templates'] = json.loads(templates_str)
+                    except json.JSONDecodeError:
+                        st.error("Invalid JSON format in templates.")
             col['options'] = options
 
             if st.button("Remove Column", key=f"remove_{i}"):
