@@ -41,8 +41,24 @@ def main():
 
             options = col.get('options', {})
             if col['type'] == 'date':
-                options['start'] = st.text_input("Start Date Ref", options.get('start', '-1y'), key=f"start_{i}")
-                options['end'] = st.text_input("End Date Ref", options.get('end', 'today'), key=f"end_{i}")
+                # UI to choose between dynamic text reference or fixed date picker
+                is_fixed_date = isinstance(options.get('start'), str) and options.get('start', '').count('-') == 2
+                date_input_method = st.radio("Date Input Method", ["Dynamic Reference", "Fixed Date"],
+                                             index=1 if is_fixed_date else 0,
+                                             horizontal=True, key=f"date_method_{i}")
+
+                if date_input_method == "Dynamic Reference":
+                    options['start'] = st.text_input("Start Date Reference", options.get('start', '-1y'), key=f"start_ref_{i}")
+                    options['end'] = st.text_input("End Date Reference", options.get('end', 'today'), key=f"end_ref_{i}")
+                else: # Fixed Date
+                    start_date_val = pd.to_datetime(options.get('start')).date() if isinstance(options.get('start'), str) and options.get('start', 'today') != 'today' else pd.Timestamp.now().date()
+                    end_date_val = pd.to_datetime(options.get('end')).date() if isinstance(options.get('end'), str) and options.get('end', 'today') != 'today' else pd.Timestamp.now().date()
+
+                    start_date = st.date_input("Start Date", value=start_date_val, key=f"start_date_{i}")
+                    end_date = st.date_input("End Date", value=end_date_val, key=f"end_date_{i}")
+                    options['start'] = start_date.strftime('%Y-%m-%d')
+                    options['end'] = end_date.strftime('%Y-%m-%d')
+
             elif col['type'] == 'choice':
                 choices_str = st.text_area("Choices (comma-separated)", ", ".join(options.get('choices', [])), key=f"choices_{i}")
                 options['choices'] = [c.strip() for c in choices_str.split(',')]

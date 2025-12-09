@@ -58,19 +58,32 @@ class SyntheticDataGenerator:
         if isinstance(ref, (date, datetime)):
             return ref
 
-        if ref in row:
+        if ref in row and isinstance(row.get(ref), (date, datetime)):
             return row[ref]
 
         if ref == 'today':
             return date.today()
 
-        # Handle relative dates like '+30d' or '-1y'
-        base = base_date or date.today()
-        num, unit = int(ref[:-1]), ref[-1]
-        if unit == 'y': return base + relativedelta(years=num)
-        if unit == 'd': return base + relativedelta(days=num)
+        # Attempt to parse a fixed date string first (e.g., "2024-01-15")
+        try:
+            return datetime.strptime(ref, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            pass # Not a fixed date, proceed to relative date logic
 
-        return base
+        # Handle relative dates like '+30d' or '-1y'
+        try:
+            base = base_date or date.today()
+            if ref and ref[-1] in ('y', 'd') and ref[:-1]:
+                num = int(ref[:-1])
+                unit = ref[-1]
+                if unit == 'y': return base + relativedelta(years=num)
+                if unit == 'd': return base + relativedelta(days=num)
+        except (ValueError, TypeError, IndexError):
+            # Not a valid relative date string
+            pass
+
+        # Fallback for any unresolvable reference
+        return base_date or date.today()
 
     def generate(self, num_rows, unique_person_ratio=0.3):
         num_unique_persons = max(1, int(num_rows * unique_person_ratio))
