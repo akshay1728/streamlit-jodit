@@ -51,8 +51,15 @@ def main():
                     options['start'] = st.text_input("Start Date Reference", options.get('start', '-1y'), key=f"start_ref_{i}")
                     options['end'] = st.text_input("End Date Reference", options.get('end', 'today'), key=f"end_ref_{i}")
                 else: # Fixed Date
-                    start_date_val = pd.to_datetime(options.get('start')).date() if isinstance(options.get('start'), str) and options.get('start', 'today') != 'today' else pd.Timestamp.now().date()
-                    end_date_val = pd.to_datetime(options.get('end')).date() if isinstance(options.get('end'), str) and options.get('end', 'today') != 'today' else pd.Timestamp.now().date()
+                    try:
+                        start_date_val = pd.to_datetime(options.get('start')).date()
+                    except (ValueError, pd._libs.tslibs.parsing.DateParseError):
+                        start_date_val = pd.Timestamp.now().date()
+
+                    try:
+                        end_date_val = pd.to_datetime(options.get('end')).date()
+                    except (ValueError, pd._libs.tslibs.parsing.DateParseError):
+                        end_date_val = pd.Timestamp.now().date()
 
                     start_date = st.date_input("Start Date", value=start_date_val, key=f"start_date_{i}")
                     end_date = st.date_input("End Date", value=end_date_val, key=f"end_date_{i}")
@@ -93,7 +100,7 @@ def main():
     else:
         with st.form("new_col_form", clear_on_submit=True):
             new_name = st.text_input("New Column Name")
-            new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id"])
+            new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text"])
             if st.form_submit_button("Add to Specification"):
                 st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
                 st.rerun()
