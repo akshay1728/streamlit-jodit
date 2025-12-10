@@ -35,8 +35,10 @@ def main():
     for i, col in enumerate(st.session_state.columns):
         with st.expander(f"Column {i+1}: {col['name']} ({col['type']})", expanded=True):
             col['name'] = st.text_input("Column Name", col['name'], key=f"name_{i}")
-            col['type'] = st.selectbox("Column Type", ["text", "date", "choice", "person_id", "contextual_text"],
-                                       index=["text", "date", "choice", "person_id", "contextual_text"].index(col['type']),
+
+            column_types = ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency"]
+            col['type'] = st.selectbox("Column Type", column_types,
+                                       index=column_types.index(col['type']),
                                        key=f"type_{i}")
 
             options = col.get('options', {})
@@ -69,6 +71,7 @@ def main():
             elif col['type'] == 'choice':
                 choices_str = st.text_area("Choices (comma-separated)", ", ".join(options.get('choices', [])), key=f"choices_{i}")
                 options['choices'] = [c.strip() for c in choices_str.split(',')]
+
             elif col['type'] == 'contextual_text':
                 available_context_cols = [c['name'] for c in st.session_state.columns if c is not col]
                 if not available_context_cols:
@@ -80,6 +83,11 @@ def main():
                         options['templates'] = json.loads(templates_str)
                     except json.JSONDecodeError:
                         st.error("Invalid JSON format in templates.")
+
+            elif col['type'] in ['integer', 'currency']:
+                options['min'] = st.number_input("Min Value", value=options.get('min', 0), key=f"min_{i}")
+                options['max'] = st.number_input("Max Value", value=options.get('max', 100), key=f"max_{i}")
+
             col['options'] = options
 
             if st.button("Remove Column", key=f"remove_{i}"):
@@ -100,7 +108,7 @@ def main():
     else:
         with st.form("new_col_form", clear_on_submit=True):
             new_name = st.text_input("New Column Name")
-            new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text"])
+            new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency"])
             if st.form_submit_button("Add to Specification"):
                 st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
                 st.rerun()

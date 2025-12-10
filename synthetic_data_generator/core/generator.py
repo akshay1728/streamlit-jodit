@@ -51,6 +51,17 @@ class SyntheticDataGenerator:
                 else:
                     value = self.faker.sentence() # Fallback
 
+            elif col_type == 'integer':
+                min_val = col_spec.get('min', 0)
+                max_val = col_spec.get('max', 100)
+                value = random.randint(min_val, max_val)
+
+            elif col_type == 'currency':
+                min_val = col_spec.get('min', 0.0)
+                max_val = col_spec.get('max', 1000.0)
+                amount = random.uniform(min_val, max_val)
+                value = f"£{amount:.2f}"
+
             row[col_name] = value
         return row
 
