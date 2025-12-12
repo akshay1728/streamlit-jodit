@@ -5,6 +5,7 @@ from faker import Faker
 import random
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
+import db_utils
 
 class SyntheticDataGenerator:
     """
@@ -13,6 +14,23 @@ class SyntheticDataGenerator:
     def __init__(self, specifications):
         self.specifications = specifications
         self.faker = Faker()
+        self._prepare_data_sources()
+
+    def _prepare_data_sources(self):
+        """
+        Pre-fetches data from the database for scvid and group types.
+        """
+        self.data_sources = {}
+        for col_name, col_spec in self.specifications.items():
+            col_type = col_spec.get('type')
+            if col_type in ['scvid', 'group']:
+                options = col_spec.get('options', {})
+                table = options.get('table')
+                column = options.get('column')
+                percentage = options.get('percentage', 100)
+                if table and column:
+                    # Cache the data sample
+                    self.data_sources[col_name] = db_utils.get_data_sample(table, column, percentage)
 
     def _generate_row(self, person_ids):
         row = {}
@@ -61,6 +79,13 @@ class SyntheticDataGenerator:
                 max_val = col_spec.get('max', 1000.0)
                 amount = random.uniform(min_val, max_val)
                 value = f"£{amount:.2f}"
+
+            elif col_type in ['scvid', 'group']:
+                source_data = self.data_sources.get(col_name)
+                if source_data:
+                    value = random.choice(source_data)
+                else:
+                    value = None # Or some other fallback
 
             row[col_name] = value
         return row

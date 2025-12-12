@@ -2,26 +2,33 @@ import streamlit as st
 import pandas as pd
 import json
 from synthetic_data_generator.core.generator import SyntheticDataGenerator
-import file_storage
+import db_utils
 
 def main():
     st.set_page_config(layout="wide")
-    st.title("File-Based Synthetic Data Generator")
+    st.title("Database-Powered Synthetic Data Generator")
 
-    all_specs = file_storage.load_all_specs()
+    # --- Database Setup ---
+    # This will create the tables on the first run if they don't exist.
+    db_utils.setup_database()
+
+    # --- Load all specifications from the database ---
+    all_specs = db_utils.load_specifications_from_db()
 
     # --- Sidebar for Specification Management ---
     st.sidebar.title("Specification Manager")
 
-    if 'current_spec_name' not in st.session_state:
+    if 'current_spec_name' not in st.session_state and all_specs:
         st.session_state.current_spec_name = list(all_specs.keys())[0]
+    elif not all_specs:
+        st.session_state.current_spec_name = "New Specification"
 
     def on_spec_change():
         st.session_state.current_spec_name = st.session_state.spec_selector
 
-    st.sidebar.selectbox("Select a Specification", options=all_specs.keys(), key="spec_selector", on_change=on_spec_change)
+    st.sidebar.selectbox("Select Specification", list(all_specs.keys()), key="spec_selector", on_change=on_spec_change)
 
-    new_spec_name = st.sidebar.text_input("Or, Create a New Specification Name")
+    new_spec_name = st.sidebar.text_input("Or, Create New Specification", value="New Specification")
     if st.sidebar.button("Create and Edit New"):
         st.session_state.current_spec_name = new_spec_name
         st.session_state.columns = []
@@ -34,16 +41,15 @@ def main():
 
     for i, col in enumerate(st.session_state.columns):
         with st.expander(f"Column {i+1}: {col['name']} ({col['type']})", expanded=True):
-            col['name'] = st.text_input("Column Name", col['name'], key=f"name_{i}")
+            col['name'] = st.text_input("Column Name", col.get('name', ''), key=f"name_{i}")
 
-            column_types = ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency"]
-            col['type'] = st.selectbox("Column Type", column_types,
-                                       index=column_types.index(col['type']),
-                                       key=f"type_{i}")
+            column_types = ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency", "scvid", "group"]
+            current_type_index = column_types.index(col['type']) if col.get('type') in column_types else 0
+            col['type'] = st.selectbox("Column Type", column_types, index=current_type_index, key=f"type_{i}")
 
             options = col.get('options', {})
+
             if col['type'] == 'date':
-                # UI to choose between dynamic text reference or fixed date picker
                 is_fixed_date = isinstance(options.get('start'), str) and options.get('start', '').count('-') == 2
                 date_input_method = st.radio("Date Input Method", ["Dynamic Reference", "Fixed Date"],
                                              index=1 if is_fixed_date else 0,
@@ -87,6 +93,13 @@ def main():
             elif col['type'] in ['integer', 'currency']:
                 options['min'] = st.number_input("Min Value", value=options.get('min', 0), key=f"min_{i}")
                 options['max'] = st.number_input("Max Value", value=options.get('max', 100), key=f"max_{i}")
+            elif col['type'] in ['scvid', 'group']:
+                tables = db_utils.get_table_names()
+                options['table'] = st.selectbox("Source Table", tables, key=f"table_{i}")
+                if options['table']:
+                    columns = db_utils.get_column_names(options['table'])
+                    options['column'] = st.selectbox("Source Column", columns, key=f"column_{i}")
+                options['percentage'] = st.slider("Percentage of Values to Use", 1, 100, options.get('percentage', 100), key=f"perc_{i}")
 
             col['options'] = options
 
@@ -96,34 +109,23 @@ def main():
 
     # --- Add Column Workflow ---
     st.subheader("Add a New Column")
-    all_unique_cols = file_storage.get_all_unique_columns(all_specs)
-    add_choice = st.radio("Add Method", ["Define New", "Reuse Existing"], horizontal=True)
-
-    if add_choice == "Reuse Existing" and all_unique_cols:
-        col_display = {f"{c['name']} ({c['type']})": c for c in all_unique_cols}
-        selected_col_key = st.selectbox("Select an existing column", options=col_display.keys())
-        if st.button("Add Selected Column"):
-            st.session_state.columns.append(col_display[selected_col_key])
+    with st.form("new_col_form", clear_on_submit=True):
+        new_name = st.text_input("New Column Name")
+        new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency", "scvid", "group"])
+        if st.form_submit_button("Add to Specification"):
+            st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
             st.rerun()
-    else:
-        with st.form("new_col_form", clear_on_submit=True):
-            new_name = st.text_input("New Column Name")
-            new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency"])
-            if st.form_submit_button("Add to Specification"):
-                st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
-                st.rerun()
 
     # --- Actions ---
     st.header("Actions")
-    if st.button("Save Specification"):
-        all_specs[st.session_state.current_spec_name] = st.session_state.columns
-        file_storage.save_all_specs(all_specs)
-        st.success(f"Specification '{st.session_state.current_spec_name}' saved successfully!")
+    if st.button("Save Specification to DB"):
+        db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns)
+        st.success(f"Specification '{st.session_state.current_spec_name}' saved to the database!")
 
-    num_rows = st.number_input("Number of Rows", 1, 100000, 100)
+    num_rows = st.number_input("Number of Rows to Generate", 1, 100000, 100)
     if st.button("Generate Data"):
-        spec = {col['name']: {'type': col['type'], **col.get('options', {})} for col in st.session_state.columns}
-        generator = SyntheticDataGenerator(spec)
+        spec_for_gen = {col['name']: {'type': col['type'], 'options': col.get('options', {})} for col in st.session_state.columns}
+        generator = SyntheticDataGenerator(spec_for_gen)
         st.session_state.generated_data = generator.generate(num_rows)
 
     if 'generated_data' in st.session_state and st.session_state.generated_data is not None:
@@ -133,7 +135,7 @@ def main():
         st.download_button(
             label="Download Data as CSV",
             data=csv,
-            file_name=f"{st.session_state.current_spec_name}.csv",
+            file_name=f"{st.session_state.current_spec_name}_synthetic_data.csv",
             mime='text/csv'
         )
 
