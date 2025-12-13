@@ -4,13 +4,31 @@ import json
 from synthetic_data_generator.core.generator import SyntheticDataGenerator
 import db_utils
 
+# --- Constants ---
+COLUMN_TYPES = [
+    "text", "date", "choice", "person_id", "contextual_text",
+    "integer", "currency", "scvid", "group"
+]
+
 def main():
     st.set_page_config(layout="wide")
     st.title("Database-Powered Synthetic Data Generator")
 
-    # --- Database Setup ---
-    # This will create the tables on the first run if they don't exist.
-    db_utils.setup_database()
+    # --- Database Connection Check ---
+    conn = db_utils.get_db_connection()
+    if not conn:
+        st.error(
+            "**Failed to connect to the database.**\n\n"
+            "Please ensure the connection details in `config.py` are correct. "
+            "If you don't have a database, you can run in mock mode by setting `DB_SERVER = \"mock_server\"` in the config file."
+        )
+        return # Stop the app from running further
+
+    if conn != "mock_connection":
+        # --- Database Setup ---
+        # This will create the tables on the first run if they don't exist.
+        db_utils.setup_database()
+        conn.close() # Close the connection used for the check
 
     # --- Load all specifications from the database ---
     all_specs = db_utils.load_specifications_from_db()
@@ -25,6 +43,8 @@ def main():
 
     def on_spec_change():
         st.session_state.current_spec_name = st.session_state.spec_selector
+        # When the selection changes, we must also update the columns in the session state
+        st.session_state.columns = all_specs.get(st.session_state.current_spec_name, [])
 
     st.sidebar.selectbox("Select Specification", list(all_specs.keys()), key="spec_selector", on_change=on_spec_change)
 
@@ -43,9 +63,8 @@ def main():
         with st.expander(f"Column {i+1}: {col['name']} ({col['type']})", expanded=True):
             col['name'] = st.text_input("Column Name", col.get('name', ''), key=f"name_{i}")
 
-            column_types = ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency", "scvid", "group"]
-            current_type_index = column_types.index(col['type']) if col.get('type') in column_types else 0
-            col['type'] = st.selectbox("Column Type", column_types, index=current_type_index, key=f"type_{i}")
+            current_type_index = COLUMN_TYPES.index(col['type']) if col.get('type') in COLUMN_TYPES else 0
+            col['type'] = st.selectbox("Column Type", COLUMN_TYPES, index=current_type_index, key=f"type_{i}")
 
             options = col.get('options', {})
 
@@ -111,7 +130,7 @@ def main():
     st.subheader("Add a New Column")
     with st.form("new_col_form", clear_on_submit=True):
         new_name = st.text_input("New Column Name")
-        new_type = st.selectbox("New Column Type", ["text", "date", "choice", "person_id", "contextual_text", "integer", "currency", "scvid", "group"])
+        new_type = st.selectbox("New Column Type", COLUMN_TYPES)
         if st.form_submit_button("Add to Specification"):
             st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
             st.rerun()
@@ -119,8 +138,11 @@ def main():
     # --- Actions ---
     st.header("Actions")
     if st.button("Save Specification to DB"):
-        db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns)
-        st.success(f"Specification '{st.session_state.current_spec_name}' saved to the database!")
+        success = db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns)
+        if success:
+            st.success(f"Specification '{st.session_state.current_spec_name}' saved to the database!")
+        else:
+            st.error("Failed to save the specification to the database. Check console for errors.")
 
     num_rows = st.number_input("Number of Rows to Generate", 1, 100000, 100)
     if st.button("Generate Data"):
