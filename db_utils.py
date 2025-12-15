@@ -159,10 +159,16 @@ def save_specification_to_db(spec_name, columns):
     return execute_non_query("EXEC SaveSpecification ?, ?", params=(spec_name, columns_json))
 
 def get_table_names():
-    return execute_query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'")['TABLE_NAME'].tolist()
+    df = execute_query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'")
+    if not df.empty and 'TABLE_NAME' in df.columns:
+        return df['TABLE_NAME'].tolist()
+    return []
 
 def get_column_names(table_name):
-    return execute_query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", params=(table_name,))['COLUMN_NAME'].tolist()
+    df = execute_query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", params=(table_name,))
+    if not df.empty and 'COLUMN_NAME' in df.columns:
+        return df['COLUMN_NAME'].tolist()
+    return []
 
 def get_data_sample(table, column, percentage):
     # This is simplified for the mock. A real implementation would be more robust.

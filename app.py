@@ -10,52 +10,72 @@ COLUMN_TYPES = [
     "integer", "currency", "scvid", "group"
 ]
 
+# --- UI Helper Functions ---
+def render_options_for_new_column():
+    """Renders the correct UI inputs for the new column based on its type."""
+    col_type = st.session_state.new_column['type']
+    options = st.session_state.new_column['options']
+
+    if col_type == 'date':
+        # Simplified for brevity, could be expanded
+        options['start'] = st.text_input("Start Date Ref", "-1y", key="new_date_start")
+        options['end'] = st.text_input("End Date Ref", "today", key="new_date_end")
+    elif col_type == 'choice':
+        choices_str = st.text_area("Choices (comma-separated)", key="new_choice_str")
+        options['choices'] = [c.strip() for c in choices_str.split(',')]
+    elif col_type in ['integer', 'currency']:
+        options['min'] = st.number_input("Min Value", 0, key="new_min")
+        options['max'] = st.number_input("Max Value", 100, key="new_max")
+    elif col_type == 'contextual_text':
+        available_context_cols = [c['name'] for c in st.session_state.columns]
+        if not available_context_cols:
+            st.warning("You must define at least one other column to use as a context.")
+        else:
+            options['context_column'] = st.selectbox("Context Column", available_context_cols, key="new_context_col")
+            templates_str = st.text_area("Templates (JSON format)", "{}", height=150, key="new_templates_str")
+            try:
+                options['templates'] = json.loads(templates_str)
+            except json.JSONDecodeError:
+                st.error("Invalid JSON format in templates.")
+    elif col_type in ['scvid', 'group']:
+        tables = db_utils.get_table_names()
+        selected_table = st.selectbox("Source Table", tables, key="new_scvid_table")
+        if selected_table:
+            columns = db_utils.get_column_names(selected_table)
+            selected_column = st.selectbox("Source Column", columns, key="new_scvid_col")
+            percentage = st.slider("Percentage", 1, 100, 100, key="new_scvid_perc")
+            options.update({"table": selected_table, "column": selected_column, "percentage": percentage})
+
 def main():
     st.set_page_config(layout="wide")
     st.title("Database-Powered Synthetic Data Generator")
 
-    # --- Database Connection Check ---
+    # --- DB Connection Check ---
     conn = db_utils.get_db_connection()
     if not conn:
-        st.error(
-            "**Failed to connect to the database.**\n\n"
-            "Please ensure the connection details in `config.py` are correct. "
-            "If you don't have a database, you can run in mock mode by setting `DB_SERVER = \"mock_server\"` in the config file."
-        )
-        return # Stop the app from running further
-
+        st.error("Failed to connect to the database. Check `config.py`.")
+        return
     if conn != "mock_connection":
-        # --- Database Setup ---
-        # This will create the tables on the first run if they don't exist.
         db_utils.setup_database()
-        conn.close() # Close the connection used for the check
+        conn.close()
 
-    # --- Load all specifications from the database ---
     all_specs = db_utils.load_specifications_from_db()
 
-    # --- Sidebar for Specification Management ---
+    # --- Sidebar ---
     st.sidebar.title("Specification Manager")
-
     if 'current_spec_name' not in st.session_state and all_specs:
         st.session_state.current_spec_name = list(all_specs.keys())[0]
     elif not all_specs:
-        st.session_state.current_spec_name = "New Specification"
+        st.session_state.current_spec_name = "New Spec"
 
     def on_spec_change():
         st.session_state.current_spec_name = st.session_state.spec_selector
-        # When the selection changes, we must also update the columns in the session state
         st.session_state.columns = all_specs.get(st.session_state.current_spec_name, [])
 
     st.sidebar.selectbox("Select Specification", list(all_specs.keys()), key="spec_selector", on_change=on_spec_change)
 
-    new_spec_name = st.sidebar.text_input("Or, Create New Specification", value="New Specification")
-    if st.sidebar.button("Create and Edit New"):
-        st.session_state.current_spec_name = new_spec_name
-        st.session_state.columns = []
-
-    # --- Main Area for Column Editing ---
-    st.header(f"Editing Specification: '{st.session_state.current_spec_name}'")
-
+    # --- Column Editor ---
+    st.header(f"Editing: '{st.session_state.current_spec_name}'")
     if 'columns' not in st.session_state:
         st.session_state.columns = all_specs.get(st.session_state.current_spec_name, [])
 
@@ -114,10 +134,15 @@ def main():
                 options['max'] = st.number_input("Max Value", value=options.get('max', 100), key=f"max_{i}")
             elif col['type'] in ['scvid', 'group']:
                 tables = db_utils.get_table_names()
-                options['table'] = st.selectbox("Source Table", tables, key=f"table_{i}")
+
+                table_index = tables.index(options['table']) if options.get('table') in tables else 0
+                options['table'] = st.selectbox("Source Table", tables, index=table_index, key=f"table_{i}")
+
                 if options['table']:
                     columns = db_utils.get_column_names(options['table'])
-                    options['column'] = st.selectbox("Source Column", columns, key=f"column_{i}")
+                    column_index = columns.index(options['column']) if options.get('column') in columns else 0
+                    options['column'] = st.selectbox("Source Column", columns, index=column_index, key=f"column_{i}")
+
                 options['percentage'] = st.slider("Percentage of Values to Use", 1, 100, options.get('percentage', 100), key=f"perc_{i}")
 
             col['options'] = options
@@ -126,14 +151,24 @@ def main():
                 st.session_state.columns.pop(i)
                 st.rerun()
 
-    # --- Add Column Workflow ---
+    # --- Add New Column UI (Rebuilt) ---
     st.subheader("Add a New Column")
-    with st.form("new_col_form", clear_on_submit=True):
-        new_name = st.text_input("New Column Name")
-        new_type = st.selectbox("New Column Type", COLUMN_TYPES)
-        if st.form_submit_button("Add to Specification"):
-            st.session_state.columns.append({"name": new_name, "type": new_type, "options": {}})
+    if 'new_column' not in st.session_state:
+        st.session_state.new_column = {"name": "", "type": "text", "options": {}}
+
+    st.session_state.new_column['name'] = st.text_input("Name", st.session_state.new_column['name'])
+    st.session_state.new_column['type'] = st.selectbox("Type", COLUMN_TYPES,
+        index=COLUMN_TYPES.index(st.session_state.new_column['type']))
+
+    render_options_for_new_column()
+
+    if st.button("Add Column to Specification"):
+        if st.session_state.new_column['name']:
+            st.session_state.columns.append(st.session_state.new_column.copy())
+            st.session_state.new_column = {"name": "", "type": "text", "options": {}} # Reset
             st.rerun()
+        else:
+            st.warning("Column name cannot be empty.")
 
     # --- Actions ---
     st.header("Actions")
