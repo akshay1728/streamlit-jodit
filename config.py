@@ -1,11 +1,8 @@
 # config.py
 
-# config.py
+# Base server for storing specifications
+BASE_SERVER = "your_base_server.database.windows.net"
+BASE_DATABASE = "your_base_database"
 
-# To use a real database, replace these mock details with your actual credentials.
-# The application will run in a standalone "mock" mode if the server is set to "mock_server".
-DB_SERVER = "mock_server"
-DB_DATABASE = "mock_db"
-DB_USERNAME = "mock_user"
-DB_PASSWORD = "mock_password"
-DB_DRIVER = "{ODBC Driver 17 for SQL Server}"
+# Driver for the database connection
+DRIVER = "{ODBC Driver 17 for SQL Server}"

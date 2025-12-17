@@ -11,8 +11,10 @@ class SyntheticDataGenerator:
     """
     The core engine for generating synthetic data based on a detailed specification.
     """
-    def __init__(self, specifications):
+    def __init__(self, specifications, server, database):
         self.specifications = specifications
+        self.server = server
+        self.database = database
         self.faker = Faker()
         self._prepare_data_sources()
 
@@ -30,7 +32,7 @@ class SyntheticDataGenerator:
                 percentage = options.get('percentage', 100)
                 if table and column:
                     # Cache the data sample
-                    self.data_sources[col_name] = db_utils.get_data_sample(table, column, percentage)
+                    self.data_sources[col_name] = db_utils.get_data_sample(table, column, percentage, self.server, self.database)
 
     def _generate_row(self, person_ids):
         row = {}
