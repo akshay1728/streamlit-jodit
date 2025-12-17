@@ -55,13 +55,35 @@ def render_options_for_new_column(server, db):
             except json.JSONDecodeError:
                 st.error("Invalid JSON format in templates.")
     elif col_type in ['scvid', 'group']:
-        tables = db_utils.get_table_names(server, db)
-        selected_table = st.selectbox("Source Table", tables, key="new_scvid_table")
-        if selected_table:
-            columns = db_utils.get_column_names(selected_table, server, db)
-            selected_column = st.selectbox("Source Column", columns, key="new_scvid_col")
-            percentage = st.slider("Percentage", 1, 100, 100, key="new_scvid_perc")
-            options.update({"table": selected_table, "column": selected_column, "percentage": percentage})
+        if 'sources' not in options:
+            options['sources'] = []
+
+        st.write("Data Sources")
+
+        for j, source in enumerate(options['sources']):
+            c1, c2, c3, c4 = st.columns([3, 3, 2, 1])
+            tables = db_utils.get_table_names(server, db, st.session_state.username)
+            table_index = tables.index(source['table']) if source.get('table') in tables else 0
+            source['table'] = c1.selectbox("Table", tables, index=table_index, key=f"new_table_{j}")
+
+            if source['table']:
+                columns = db_utils.get_column_names(source['table'], server, db, st.session_state.username)
+                column_index = columns.index(source['column']) if source.get('column') in columns else 0
+                source['column'] = c2.selectbox("Column", columns, index=column_index, key=f"new_col_{j}")
+
+            source['percentage'] = c3.number_input("Percentage", 1, 100, source.get('percentage', 100), key=f"new_perc_{j}")
+
+            if c4.button("X", key=f"new_remove_source_{j}"):
+                options['sources'].pop(j)
+                st.rerun()
+
+        if st.button("Add Source", key="new_add_source"):
+            options['sources'].append({'table': '', 'column': '', 'percentage': 100})
+            st.rerun()
+
+        total_percentage = sum(s['percentage'] for s in options['sources'])
+        if total_percentage != 100:
+            st.warning(f"Percentages must sum to 100. Current total: {total_percentage}%")
 
 def main():
     st.set_page_config(layout="wide")
@@ -84,7 +106,7 @@ def main():
     source_database = st.session_state.source_database
 
     if st.session_state.is_clicked == 1:
-        all_specs = db_utils.load_specifications_from_db(conf.BASE_SERVER, conf.BASE_DATABASE)
+        all_specs = db_utils.load_specifications_from_db(conf.BASE_SERVER, conf.BASE_DATABASE, st.session_state.username)
 
         if 'current_spec_name' not in st.session_state and all_specs:
             st.session_state.current_spec_name = list(all_specs.keys())[0]
@@ -152,14 +174,35 @@ def main():
                     options['min'] = st.number_input("Min Value", value=options.get('min', 0), key=f"min_{i}")
                     options['max'] = st.number_input("Max Value", value=options.get('max', 100), key=f"max_{i}")
                 elif col['type'] in ['scvid', 'group']:
-                    tables = db_utils.get_table_names(source_server, source_database)
-                    table_index = tables.index(options['table']) if options.get('table') in tables else 0
-                    options['table'] = st.selectbox("Source Table", tables, index=table_index, key=f"table_{i}")
-                    if options['table']:
-                        columns = db_utils.get_column_names(options['table'], source_server, source_database)
-                        column_index = columns.index(options['column']) if options.get('column') in columns else 0
-                        options['column'] = st.selectbox("Source Column", columns, index=column_index, key=f"column_{i}")
-                    options['percentage'] = st.slider("Percentage", 1, 100, options.get('percentage', 100), key=f"perc_{i}")
+                    if 'sources' not in options:
+                        options['sources'] = []
+
+                    st.write("Data Sources")
+
+                    for j, source in enumerate(options['sources']):
+                        c1, c2, c3, c4 = st.columns([3, 3, 2, 1])
+                        tables = db_utils.get_table_names(source_server, source_database, st.session_state.username)
+                        table_index = tables.index(source['table']) if source.get('table') in tables else 0
+                        source['table'] = c1.selectbox("Table", tables, index=table_index, key=f"table_{i}_{j}")
+
+                        if source['table']:
+                            columns = db_utils.get_column_names(source['table'], source_server, source_database, st.session_state.username)
+                            column_index = columns.index(source['column']) if source.get('column') in columns else 0
+                            source['column'] = c2.selectbox("Column", columns, index=column_index, key=f"col_{i}_{j}")
+
+                        source['percentage'] = c3.number_input("Percentage", 1, 100, source.get('percentage', 100), key=f"perc_{i}_{j}")
+
+                        if c4.button("X", key=f"remove_source_{i}_{j}"):
+                            options['sources'].pop(j)
+                            st.rerun()
+
+                    if st.button("Add Source", key=f"add_source_{i}"):
+                        options['sources'].append({'table': '', 'column': '', 'percentage': 100})
+                        st.rerun()
+
+                    total_percentage = sum(s['percentage'] for s in options['sources'])
+                    if total_percentage != 100:
+                        st.warning(f"Percentages must sum to 100. Current total: {total_percentage}%")
 
                 col['options'] = options
 
@@ -197,7 +240,7 @@ def main():
 
         st.header("Actions")
         if st.button("Save Specification to DB"):
-            success = db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns, conf.BASE_SERVER, conf.BASE_DATABASE)
+            success = db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns, conf.BASE_SERVER, conf.BASE_DATABASE, st.session_state.username)
             if success:
                 st.success(f"Specification '{st.session_state.current_spec_name}' saved to the database!")
             else:
@@ -206,7 +249,7 @@ def main():
         num_rows = st.number_input("Number of Rows to Generate", 1, 100000, 100)
         if st.button("Generate Data"):
             spec_for_gen = {col['name']: {'type': col['type'], 'options': col.get('options', {})} for col in st.session_state.columns}
-            generator = SyntheticDataGenerator(spec_for_gen, source_server, source_database)
+            generator = SyntheticDataGenerator(spec_for_gen, source_server, source_database, st.session_state.username)
             st.session_state.generated_data = generator.generate(num_rows)
 
         if 'generated_data' in st.session_state and st.session_state.generated_data is not None:

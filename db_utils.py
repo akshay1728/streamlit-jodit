@@ -21,8 +21,8 @@ def get_db_connection(server, database, username):
         st.error(f"Error creating connection: {e}")
         return None, None
 
-def execute_query(query, server, db, params=None):
-    conn, engine = get_db_connection(server, db)
+def execute_query(query, server, db, username, params=None):
+    conn, engine = get_db_connection(server, db, username)
     if not conn:
         return pd.DataFrame()
     try:
@@ -30,8 +30,8 @@ def execute_query(query, server, db, params=None):
     finally:
         if conn: conn.close()
 
-def execute_non_query(query, server, db, params=None):
-    conn, engine = get_db_connection(server, db)
+def execute_non_query(query, server, db, username, params=None):
+    conn, engine = get_db_connection(server, db, username)
     if not conn: return False
     try:
         with conn.cursor() as cursor:
@@ -43,8 +43,8 @@ def execute_non_query(query, server, db, params=None):
     finally:
         if conn: conn.close()
 
-def load_specifications_from_db(server, db):
-    df = execute_query("EXEC GetAllSpecifications", server, db)
+def load_specifications_from_db(server, db, username):
+    df = execute_query("EXEC GetAllSpecifications", server, db, username)
     all_specs = {}
     if not df.empty:
         for spec_name, group in df.groupby('spec_name'):
@@ -54,23 +54,23 @@ def load_specifications_from_db(server, db):
             all_specs[spec_name] = cols
     return all_specs if all_specs else {}
 
-def save_specification_to_db(spec_name, columns, server, db):
+def save_specification_to_db(spec_name, columns, server, db, username):
     for i, col in enumerate(columns): col['order'] = i
     columns_json = json.dumps(columns)
-    return execute_non_query("EXEC SaveSpecification ?, ?", server, db, params=(spec_name, columns_json))
+    return execute_non_query("EXEC SaveSpecification ?, ?", server, db, username, params=(spec_name, columns_json))
 
-def get_table_names(server, db):
-    df = execute_query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", server, db)
+def get_table_names(server, db, username):
+    df = execute_query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", server, db, username)
     if not df.empty and 'TABLE_NAME' in df.columns:
         return df['TABLE_NAME'].tolist()
     return []
 
-def get_column_names(table_name, server, db):
-    df = execute_query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", server, db, params=(table_name,))
+def get_column_names(table_name, server, db, username):
+    df = execute_query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", server, db, username, params=(table_name,))
     if not df.empty and 'COLUMN_NAME' in df.columns:
         return df['COLUMN_NAME'].tolist()
     return []
 
-def get_data_sample(table, column, percentage, server, db):
-    df = execute_query(f"SELECT TOP {int(percentage)} PERCENT {column} FROM {table} ORDER BY NEWID()", server, db)
+def get_data_sample(table, column, percentage, server, db, username):
+    df = execute_query(f"SELECT TOP {int(percentage)} PERCENT {column} FROM {table} ORDER BY NEWID()", server, db, username)
     return df[column].tolist() if not df.empty else []

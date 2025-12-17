@@ -11,28 +11,28 @@ class SyntheticDataGenerator:
     """
     The core engine for generating synthetic data based on a detailed specification.
     """
-    def __init__(self, specifications, server, database):
+    def __init__(self, specifications, server, database, username):
         self.specifications = specifications
         self.server = server
         self.database = database
+        self.username = username
         self.faker = Faker()
         self._prepare_data_sources()
 
     def _prepare_data_sources(self):
         """
-        Pre-fetches data from the database for scvid and group types.
+        Pre-fetches data from the database for scvid and group types, supporting multiple sources.
         """
         self.data_sources = {}
         for col_name, col_spec in self.specifications.items():
-            col_type = col_spec.get('type')
-            if col_type in ['scvid', 'group']:
-                options = col_spec.get('options', {})
-                table = options.get('table')
-                column = options.get('column')
-                percentage = options.get('percentage', 100)
-                if table and column:
-                    # Cache the data sample
-                    self.data_sources[col_name] = db_utils.get_data_sample(table, column, percentage, self.server, self.database)
+            if col_spec.get('type') in ['scvid', 'group']:
+                sources = col_spec.get('options', {}).get('sources', [])
+                if sources:
+                    self.data_sources[col_name] = []
+                    for source in sources:
+                        table, column, percentage = source['table'], source['column'], source['percentage']
+                        sample = db_utils.get_data_sample(table, column, percentage, self.server, self.database, self.username)
+                        self.data_sources[col_name].append({'data': sample, 'weight': percentage})
 
     def _generate_row(self, person_ids):
         row = {}
@@ -83,11 +83,18 @@ class SyntheticDataGenerator:
                 value = f"£{amount:.2f}"
 
             elif col_type in ['scvid', 'group']:
-                source_data = self.data_sources.get(col_name)
-                if source_data:
-                    value = random.choice(source_data)
+                sources = self.data_sources.get(col_name)
+                if sources:
+                    # Perform a weighted random choice to select a source
+                    source_list = [s['data'] for s in sources]
+                    weights = [s['weight'] for s in sources]
+                    chosen_source_data = random.choices(source_list, weights=weights, k=1)[0]
+                    if chosen_source_data:
+                        value = random.choice(chosen_source_data)
+                    else:
+                        value = None
                 else:
-                    value = None # Or some other fallback
+                    value = None # Fallback if no sources are defined
 
             row[col_name] = value
         return row
