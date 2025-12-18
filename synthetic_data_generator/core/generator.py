@@ -69,12 +69,21 @@ class SyntheticDataGenerator:
                 options = col_spec.get('options', {})
                 context_col = options.get('context_column')
                 templates = options.get('templates', {})
-                context_value = row.get(context_col)
 
-                if context_value in templates:
-                    value = random.choice(templates[context_value])
+                # Ensure context_col exists and its value has been generated in the current row
+                if context_col and context_col in row:
+                    context_value = row[context_col]
+
+                    # Safely get the list of template strings for the context value
+                    template_list = templates.get(context_value)
+
+                    # Check if template_list is a non-empty list before choosing from it
+                    if isinstance(template_list, list) and template_list:
+                        value = random.choice(template_list)
+                    else:
+                        value = self.faker.sentence() # Fallback if no valid template list
                 else:
-                    value = self.faker.sentence() # Fallback
+                    value = self.faker.sentence() # Fallback if context column is missing or not yet generated
 
             elif col_type == 'integer':
                 min_val = col_spec.get('min', 0)
