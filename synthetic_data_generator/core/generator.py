@@ -53,7 +53,11 @@ class SyntheticDataGenerator:
                 value = self.faker.date_between_dates(date_start=start_date, date_end=end_date)
 
             elif col_type == 'choice':
-                value = random.choice(col_spec.get('choices', []))
+                choices = col_spec.get('choices', [])
+                if choices:
+                    value = random.choice(choices)
+                else:
+                    value = None # Fallback for empty choices list
 
             elif col_type == 'text':
                 value = self.faker.text(max_nb_chars=col_spec.get('max_nb_chars', 50))

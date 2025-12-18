@@ -39,7 +39,7 @@ def render_options_for_new_column(server, db):
         options['end'] = st.text_input("End Date Ref", "today", key="new_date_end")
     elif col_type == 'choice':
         choices_str = st.text_area("Choices (comma-separated)", key="new_choice_str")
-        options['choices'] = [c.strip() for c in choices_str.split(',')]
+        options['choices'] = [c.strip() for c in choices_str.split(',') if c.strip()]
     elif col_type in ['integer', 'currency']:
         options['min'] = st.number_input("Min Value", 0, key="new_min")
         options['max'] = st.number_input("Max Value", 100, key="new_max")
@@ -158,7 +158,7 @@ def main():
                         options['end'] = end_date.strftime('%Y-%m-%d')
                 elif col['type'] == 'choice':
                     choices_str = st.text_area("Choices (comma-separated)", ", ".join(options.get('choices', [])), key=f"choices_{i}")
-                    options['choices'] = [c.strip() for c in choices_str.split(',')]
+                    options['choices'] = [c.strip() for c in choices_str.split(',') if c.strip()]
                 elif col['type'] == 'contextual_text':
                     available_context_cols = [c['name'] for c in st.session_state.columns if c is not col]
                     if not available_context_cols:
