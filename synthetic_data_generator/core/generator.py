@@ -66,8 +66,9 @@ class SyntheticDataGenerator:
                 value = random.choice(person_ids)
 
             elif col_type == 'contextual_text':
-                context_col = col_spec.get('context_column')
-                templates = col_spec.get('templates', {})
+                options = col_spec.get('options', {})
+                context_col = options.get('context_column')
+                templates = options.get('templates', {})
                 context_value = row.get(context_col)
 
                 if context_value in templates:

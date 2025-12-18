@@ -164,7 +164,8 @@ def main():
                     if not available_context_cols:
                         st.warning("You must define at least one other column to use as a context.")
                     else:
-                        options['context_column'] = st.selectbox("Context Column", available_context_cols, key=f"context_{i}")
+                        context_col_index = available_context_cols.index(options['context_column']) if options.get('context_column') in available_context_cols else 0
+                        options['context_column'] = st.selectbox("Context Column", available_context_cols, index=context_col_index, key=f"context_{i}")
                         templates_str = st.text_area("Templates (JSON format)", json.dumps(options.get('templates', {}), indent=2), height=150, key=f"templates_{i}")
                         try:
                             options['templates'] = json.loads(templates_str)
