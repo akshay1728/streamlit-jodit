@@ -1,5 +1,8 @@
+streamlit
 pandas
-faker
-python-dateutil
-streamlit==1.51.0
 pyodbc
+streamlit-agraph
+networkx
+Faker
+streamlit-option-menu
+sqlalchemy

@@ -95,9 +95,23 @@ def main():
 
     st.sidebar.title("Specification Manager")
     server_query = " ovm.get_autDBServer"
-    server_df = pd.read_sql(server_query, con=st.session_state.user_conn)
+    try:
+        server_df = pd.read_sql(server_query, con=st.session_state.user_conn)
+        if server_df is None:
+            server_df = pd.DataFrame()
+    except Exception as e:
+        st.sidebar.error(f"Failed to load servers: {e}")
+        server_df = pd.DataFrame()
+
     db_query = " ovm.get_autDB"
-    db_df = pd.read_sql(db_query, con=st.session_state.user_conn)
+    try:
+        db_df = pd.read_sql(db_query, con=st.session_state.user_conn)
+        if db_df is None:
+            db_df = pd.DataFrame()
+    except Exception as e:
+        st.sidebar.error(f"Failed to load databases: {e}")
+        db_df = pd.DataFrame()
+
     src_server = st.sidebar.selectbox('Server', options=server_df, key="source_server")
     src_database = st.sidebar.selectbox("Database", options=db_df, key="source_database")
     st.sidebar.button('Connect', on_click=fnSubmit, key='a')
