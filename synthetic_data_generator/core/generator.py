@@ -42,8 +42,8 @@ class SyntheticDataGenerator:
 
             if col_type == 'date':
                 options = col_spec.get('options', {})
-                start_ref = options.get('start', '-1y')
-                end_ref = options.get('end', 'today')
+                start_ref = options.get('start')
+                end_ref = options.get('end')
 
                 start_date = self._resolve_date(start_ref, row)
                 end_date = self._resolve_date(end_ref, row, base_date=start_date)
@@ -88,16 +88,22 @@ class SyntheticDataGenerator:
 
             elif col_type == 'integer':
                 options = col_spec.get('options', {})
-                min_val = options.get('min', 0)
-                max_val = options.get('max', 100)
-                value = random.randint(min_val, max_val)
+                min_val = options.get('min')
+                max_val = options.get('max')
+                if min_val is not None and max_val is not None:
+                    value = random.randint(min_val, max_val)
+                else:
+                    value = None
 
             elif col_type == 'currency':
                 options = col_spec.get('options', {})
-                min_val = options.get('min', 0.0)
-                max_val = options.get('max', 1000.0)
-                amount = random.uniform(min_val, max_val)
-                value = f"£{amount:.2f}"
+                min_val = options.get('min')
+                max_val = options.get('max')
+                if min_val is not None and max_val is not None:
+                    amount = random.uniform(min_val, max_val)
+                    value = f"£{amount:.2f}"
+                else:
+                    value = None
 
             elif col_type in ['scvid', 'group']:
                 sources = self.data_sources.get(col_name)
