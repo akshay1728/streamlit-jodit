@@ -41,8 +41,9 @@ class SyntheticDataGenerator:
             value = None
 
             if col_type == 'date':
-                start_ref = col_spec.get('start', '-1y')
-                end_ref = col_spec.get('end', 'today')
+                options = col_spec.get('options', {})
+                start_ref = options.get('start', '-1y')
+                end_ref = options.get('end', 'today')
 
                 start_date = self._resolve_date(start_ref, row)
                 end_date = self._resolve_date(end_ref, row, base_date=start_date)
@@ -86,13 +87,15 @@ class SyntheticDataGenerator:
                     value = self.faker.sentence() # Fallback if context column is missing or not yet generated
 
             elif col_type == 'integer':
-                min_val = col_spec.get('min', 0)
-                max_val = col_spec.get('max', 100)
+                options = col_spec.get('options', {})
+                min_val = options.get('min', 0)
+                max_val = options.get('max', 100)
                 value = random.randint(min_val, max_val)
 
             elif col_type == 'currency':
-                min_val = col_spec.get('min', 0.0)
-                max_val = col_spec.get('max', 1000.0)
+                options = col_spec.get('options', {})
+                min_val = options.get('min', 0.0)
+                max_val = options.get('max', 1000.0)
                 amount = random.uniform(min_val, max_val)
                 value = f"£{amount:.2f}"
 
