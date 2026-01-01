@@ -1,34 +1,23 @@
-# streamlit-jodit
+# Mantra Japa Tracker
 
-Streamlit component that allows you to use Jodit HTML editor in streamlit. Jodit is a open source rich text editor
-https://xdsoft.net/jodit/
+Mantra Japa Tracker is an Android application that helps you track your mantra japas. It allows you to input the mantra you are chanting, track how many malas of that mantra you have completed, and tag each mantra to a deity. The app also provides daily Tithi reminders and allows you to set targets for your mantra chanting.
 
-This component is based on react wrapper - https://github.com/jodit/jodit-react 
+## Features
 
-## Installation instructions
+*   Track mantra japas and malas
+*   Associate mantras with deities
+*   Set targets for mantra chanting
+*   View statistics of your progress
+*   Get daily Tithi reminders
 
-```sh
-pip install streamlit-jodit
+## Getting Started
+
+To build and run the app, you will need to get an API key from [astrologyapi.com](https://astrologyapi.com/) for the Tithi feature. Once you have an API key, create a file named `local.properties` in the root of the project and add the following line:
+
+```
+apiKey=YOUR_API_KEY
 ```
 
-## Usage instructions
+Replace `YOUR_API_KEY` with your actual API key.
 
-
-```python
-import streamlit as st
-
-from streamlit_jodit import st_jodit
-
-config={
-            
-            'minHeight':300,
-        'uploader': {
-            'insertImageAsBase64URI': True,
-            'imagesExtensions': ['jpg', 'png', 'jpeg', 'gif', 'svg', 'webp']
-                    },
-             }
-content = st_jodit(config)
-st.write(content)
-```
-By default code will pass **readonly:false** to config. 
-List of options for config is available at https://xdsoft.net/jodit/docs/options.html
+You can then build and run the app using Android Studio.
