@@ -10,7 +10,6 @@ import com.mantra.japa.ui.screens.DeityScreen
 import com.mantra.japa.ui.screens.JapaScreen
 import com.mantra.japa.ui.screens.MantraScreen
 import com.mantra.japa.ui.screens.StatisticsScreen
-import com.mantra.japa.ui.screens.TithiScreen
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
 @Composable
@@ -24,8 +23,7 @@ fun NavGraph(
             DeityScreen(
                 viewModel = viewModel,
                 onNavigateToMantra = { navController.navigate("mantra") },
-                onNavigateToStatistics = { navController.navigate("statistics") },
-                onNavigateToTithi = { navController.navigate("tithi") }
+                onNavigateToStatistics = { navController.navigate("statistics") }
             )
         }
         composable("mantra") {
@@ -46,9 +44,6 @@ fun NavGraph(
         }
         composable("statistics") {
             StatisticsScreen(viewModel = viewModel)
-        }
-        composable("tithi") {
-            TithiScreen(viewModel = viewModel)
         }
     }
 }

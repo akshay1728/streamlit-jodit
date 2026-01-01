@@ -32,8 +32,7 @@ import com.mantra.japa.ui.viewmodel.MainViewModel
 fun DeityScreen(
     viewModel: MainViewModel,
     onNavigateToMantra: () -> Unit,
-    onNavigateToStatistics: () -> Unit,
-    onNavigateToTithi: () -> Unit
+    onNavigateToStatistics: () -> Unit
 ) {
     val deities by viewModel.deities.collectAsState()
     var newDeityName by remember { mutableStateOf("") }
@@ -97,9 +96,6 @@ fun DeityScreen(
             }
             Button(onClick = onNavigateToStatistics) {
                 Text(text = stringResource(id = R.string.go_to_statistics))
-            }
-            Button(onClick = onNavigateToTithi) {
-                Text(text = stringResource(id = R.string.go_to_tithi))
             }
         }
     }
