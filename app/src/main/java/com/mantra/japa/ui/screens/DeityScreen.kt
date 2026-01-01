@@ -1,8 +1,8 @@
 package com.mantra.japa.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,11 +28,11 @@ import com.mantra.japa.R
 import com.mantra.japa.ui.theme.SoothingBlue
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DeityScreen(
     viewModel: MainViewModel,
-    onNavigateToMantra: () -> Unit,
-    onNavigateToStatistics: () -> Unit
+    onNavigateToMantra: () -> Unit
 ) {
     val deities by viewModel.deities.collectAsState()
     var newDeityName by remember { mutableStateOf("") }
@@ -46,16 +46,17 @@ fun DeityScreen(
         Text(text = stringResource(id = R.string.deities), style = MaterialTheme.typography.headlineMedium)
 
         if (deities.isEmpty()) {
-            Text(text = stringResource(id = R.string.no_deities_added_yet))
+            Text(text = stringResource(id = R.string.no_deities_added_yet), modifier = Modifier.padding(16.dp))
         } else {
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(deities) { deity ->
+                items(deities, key = { it.id }) { deity ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .animateItemPlacement(),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         colors = CardDefaults.cardColors(containerColor = SoothingBlue)
                     ) {
@@ -85,18 +86,6 @@ fun DeityScreen(
                 .padding(vertical = 8.dp)
         ) {
             Text(text = stringResource(id = R.string.add_deity))
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = onNavigateToMantra) {
-                Text(text = stringResource(id = R.string.go_to_mantras))
-            }
-            Button(onClick = onNavigateToStatistics) {
-                Text(text = stringResource(id = R.string.go_to_statistics))
-            }
         }
     }
 }

@@ -14,8 +14,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.mantra.japa.data.db.MantraDatabase
-import com.mantra.japa.ui.navigation.NavGraph
 import com.mantra.japa.ui.screens.LoadingScreen
+import com.mantra.japa.ui.screens.MainScreen
 import com.mantra.japa.ui.theme.MantraJapaTrackerTheme
 import com.mantra.japa.ui.viewmodel.MainViewModel
 import com.mantra.japa.ui.viewmodel.ViewModelFactory
@@ -43,13 +43,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MantraJapaTrackerTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (viewModel != null) {
-                        NavGraph(viewModel = viewModel!!)
+                        MainScreen(viewModel = viewModel!!)
                     } else {
                         LoadingScreen()
                     }

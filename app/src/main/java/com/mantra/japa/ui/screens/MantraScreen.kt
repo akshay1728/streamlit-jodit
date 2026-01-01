@@ -1,9 +1,9 @@
 package com.mantra.japa.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,11 +34,10 @@ import com.mantra.japa.data.model.Deity
 import com.mantra.japa.ui.theme.CalmingGreen
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MantraScreen(
     viewModel: MainViewModel,
-    onNavigateToDeity: () -> Unit,
     onNavigateToJapa: (Long) -> Unit
 ) {
     val mantras by viewModel.mantras.collectAsState()
@@ -56,16 +55,17 @@ fun MantraScreen(
         Text(text = stringResource(id = R.string.mantras), style = MaterialTheme.typography.headlineMedium)
 
         if (mantras.isEmpty()) {
-            Text(text = stringResource(id = R.string.no_mantras_added_yet))
+            Text(text = stringResource(id = R.string.no_mantras_added_yet), modifier = Modifier.padding(16.dp))
         } else {
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(mantras) { mantra ->
+                items(mantras, key = { it.id }) { mantra ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .animateItemPlacement()
                             .clickable { onNavigateToJapa(mantra.id) },
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         colors = CardDefaults.cardColors(containerColor = CalmingGreen)
@@ -90,7 +90,9 @@ fun MantraScreen(
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
         ) {
             TextField(
                 value = selectedDeity?.name ?: "",
@@ -130,15 +132,6 @@ fun MantraScreen(
                 .padding(vertical = 8.dp)
         ) {
             Text(text = stringResource(id = R.string.add_mantra))
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = onNavigateToDeity) {
-                Text(text = stringResource(id = R.string.go_to_deities))
-            }
         }
     }
 }

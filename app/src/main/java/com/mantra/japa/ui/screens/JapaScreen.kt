@@ -122,6 +122,9 @@ fun JapaScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     DatePicker(state = datePickerState)
+                    datePickerState.selectedDateMillis?.let {
+                        Text(text = "Selected date: ${formatDate(Date(it))}")
+                    }
                     TextField(
                         value = targetMalas,
                         onValueChange = { targetMalas = it },

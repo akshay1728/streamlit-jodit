@@ -1,10 +1,13 @@
 package com.mantra.japa.ui.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mantra.japa.ui.screens.DeityScreen
 import com.mantra.japa.ui.screens.JapaScreen
@@ -15,21 +18,28 @@ import com.mantra.japa.ui.viewmodel.MainViewModel
 @Composable
 fun NavGraph(
     viewModel: MainViewModel,
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
     startDestination: String = "deity"
 ) {
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier,
+        enterTransition = { fadeIn() },
+        exitTransition = { fadeOut() },
+        popEnterTransition = { fadeIn() },
+        popExitTransition = { fadeOut() }
+    ) {
         composable("deity") {
             DeityScreen(
                 viewModel = viewModel,
-                onNavigateToMantra = { navController.navigate("mantra") },
-                onNavigateToStatistics = { navController.navigate("statistics") }
+                onNavigateToMantra = { navController.navigate("mantra") }
             )
         }
         composable("mantra") {
             MantraScreen(
                 viewModel = viewModel,
-                onNavigateToDeity = { navController.navigate("deity") },
                 onNavigateToJapa = { mantraId ->
                     navController.navigate("japa/$mantraId")
                 }
