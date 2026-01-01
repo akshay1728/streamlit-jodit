@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -22,7 +20,7 @@ android {
             useSupportLibrary true
         }
 
-        val properties = Properties()
+        def properties = new java.util.Properties()
         if (rootProject.file("local.properties").exists()) {
             properties.load(rootProject.file("local.properties").inputStream())
         }
