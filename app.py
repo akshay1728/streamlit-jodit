@@ -122,19 +122,34 @@ def main():
     if st.session_state.is_clicked == 1:
         all_specs = db_utils.load_specifications_from_db(conf.BASE_SERVER, conf.BASE_DATABASE, st.session_state.username)
 
-        if 'current_spec_name' not in st.session_state and all_specs:
-            st.session_state.current_spec_name = list(all_specs.keys())[0]
-        elif not all_specs:
-            st.session_state.current_spec_name = "New Spec"
+        NEW_SPEC_OPTION = "<Create New Specification>"
+
+        if 'current_spec_name' not in st.session_state:
+            # Default to new spec mode if no specs exist, otherwise default to the first existing one.
+            st.session_state.current_spec_name = list(all_specs.keys())[0] if all_specs else NEW_SPEC_OPTION
 
         def on_spec_change():
-            st.session_state.current_spec_name = st.session_state.spec_selector
-            st.session_state.columns = all_specs.get(st.session_state.current_spec_name, [])
+            selected_option = st.session_state.spec_selector
+            if selected_option == NEW_SPEC_OPTION:
+                st.session_state.current_spec_name = NEW_SPEC_OPTION
+                st.session_state.columns = [] # Clear columns for a new spec
+            else:
+                st.session_state.current_spec_name = selected_option
+                st.session_state.columns = all_specs.get(selected_option, [])
 
-        st.sidebar.selectbox("Select Specification", list(all_specs.keys()), key="spec_selector", on_change=on_spec_change)
+        spec_options = [NEW_SPEC_OPTION] + list(all_specs.keys())
+        st.sidebar.selectbox("Select Specification", spec_options, key="spec_selector", on_change=on_spec_change)
 
-        st.header(f"Editing: '{st.session_state.current_spec_name}'")
+        if st.session_state.current_spec_name == NEW_SPEC_OPTION:
+            st.header("Creating New Specification")
+            new_spec_name = st.text_input("New Specification Name", key="new_spec_name_input")
+            if not new_spec_name:
+                st.info("Please enter a name for your new specification.")
+        else:
+            st.header(f"Editing: '{st.session_state.current_spec_name}'")
+
         if 'columns' not in st.session_state:
+            # Initialize columns based on the current spec name (could be empty for new spec)
             st.session_state.columns = all_specs.get(st.session_state.current_spec_name, [])
 
         for i, col in enumerate(st.session_state.columns):
@@ -255,11 +270,19 @@ def main():
 
         st.header("Actions")
         if st.button("Save Specification to DB"):
-            success = db_utils.save_specification_to_db(st.session_state.current_spec_name, st.session_state.columns, conf.BASE_SERVER, conf.BASE_DATABASE, st.session_state.username)
-            if success:
-                st.success(f"Specification '{st.session_state.current_spec_name}' saved to the database!")
+            spec_name_to_save = st.session_state.current_spec_name
+            if spec_name_to_save == NEW_SPEC_OPTION:
+                spec_name_to_save = st.session_state.new_spec_name_input
+
+            if not spec_name_to_save:
+                st.error("Specification name cannot be empty.")
             else:
-                st.error("Failed to save the specification to the database. Check console for errors.")
+                success = db_utils.save_specification_to_db(spec_name_to_save, st.session_state.columns, conf.BASE_SERVER, conf.BASE_DATABASE, st.session_state.username)
+                if success:
+                    st.success(f"Specification '{spec_name_to_save}' saved to the database! Please refresh to see it in the list.")
+                    # In a more advanced app, we might update the spec list without a full refresh
+                else:
+                    st.error("Failed to save the specification to the database. Check console for errors.")
 
         num_rows = st.number_input("Number of Rows to Generate", 1, 100000, 100)
         if st.button("Generate Data"):
