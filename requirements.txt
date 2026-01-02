@@ -1,0 +1,8 @@
+streamlit
+pandas
+pyodbc
+streamlit-agraph
+networkx
+Faker
+streamlit-option-menu
+sqlalchemy
