@@ -64,6 +64,23 @@ class MainViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun getStatisticsForMantra(mantraId: Long) = combine(
+        japaEntryDao.getJapaEntriesForMantra(mantraId),
+        mantraDao.getAllMantras(),
+        deityDao.getAllDeities()
+    ) { japaEntries, mantras, deities ->
+        val mantra = mantras.find { it.id == mantraId }
+        val deity = deities.find { it.id == mantra?.deityId }
+        val totalMalas = japaEntries.sumOf { it.malas }
+        val totalJapas = totalMalas * 108
+        if (mantra != null && deity != null) {
+            Statistics(mantra, deity, totalMalas, totalJapas)
+        } else {
+            null
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+
     fun getTargetForMantra(mantraId: Long) = targetDao.getTargetForMantra(mantraId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 

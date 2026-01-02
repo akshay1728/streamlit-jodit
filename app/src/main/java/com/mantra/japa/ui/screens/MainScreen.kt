@@ -22,8 +22,8 @@ import com.mantra.japa.ui.navigation.NavGraph
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
-    object Deities : BottomNavItem("deity", Icons.Default.Home, "Deities")
     object Mantras : BottomNavItem("mantra", Icons.Default.List, "Mantras")
+    object Deities : BottomNavItem("deity", Icons.Default.Home, "Deities")
     object Statistics : BottomNavItem("statistics", Icons.Default.BarChart, "Statistics")
 }
 
@@ -31,8 +31,8 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 fun MainScreen(viewModel: MainViewModel) {
     val navController = rememberNavController()
     val items = listOf(
-        BottomNavItem.Deities,
         BottomNavItem.Mantras,
+        BottomNavItem.Deities,
         BottomNavItem.Statistics,
     )
 
@@ -63,6 +63,7 @@ fun MainScreen(viewModel: MainViewModel) {
         NavGraph(
             viewModel = viewModel,
             navController = navController,
+            startDestination = BottomNavItem.Mantras.route,
             modifier = Modifier.padding(innerPadding)
         )
     }

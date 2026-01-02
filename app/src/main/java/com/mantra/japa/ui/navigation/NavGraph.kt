@@ -20,7 +20,7 @@ fun NavGraph(
     viewModel: MainViewModel,
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String = "deity"
+    startDestination: String = "mantra"
 ) {
     NavHost(
         navController = navController,
@@ -33,8 +33,7 @@ fun NavGraph(
     ) {
         composable("deity") {
             DeityScreen(
-                viewModel = viewModel,
-                onNavigateToMantra = { navController.navigate("mantra") }
+                viewModel = viewModel
             )
         }
         composable("mantra") {
@@ -50,7 +49,7 @@ fun NavGraph(
             arguments = listOf(navArgument("mantraId") { type = NavType.LongType })
         ) { backStackEntry ->
             val mantraId = backStackEntry.arguments?.getLong("mantraId") ?: 0
-            JapaScreen(viewModel = viewModel, mantraId = mantraId)
+            JapaScreen(viewModel = viewModel, mantraId = mantraId, navController = navController)
         }
         composable("statistics") {
             StatisticsScreen(viewModel = viewModel)
