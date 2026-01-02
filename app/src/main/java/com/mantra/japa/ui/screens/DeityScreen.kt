@@ -31,8 +31,7 @@ import com.mantra.japa.ui.viewmodel.MainViewModel
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DeityScreen(
-    viewModel: MainViewModel,
-    onNavigateToMantra: () -> Unit
+    viewModel: MainViewModel
 ) {
     val deities by viewModel.deities.collectAsState()
     var newDeityName by remember { mutableStateOf("") }
