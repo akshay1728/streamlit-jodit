@@ -21,10 +21,13 @@ import androidx.navigation.compose.rememberNavController
 import com.mantra.japa.ui.navigation.NavGraph
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
+import androidx.compose.material.icons.filled.Notes
+
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Mantras : BottomNavItem("mantra", Icons.Default.List, "Mantras")
     object Deities : BottomNavItem("deity", Icons.Default.Home, "Deities")
     object Statistics : BottomNavItem("statistics", Icons.Default.BarChart, "Statistics")
+    object Notes : BottomNavItem("notes", Icons.Default.Notes, "Notes")
 }
 
 @Composable
@@ -34,6 +37,7 @@ fun MainScreen(viewModel: MainViewModel) {
         BottomNavItem.Mantras,
         BottomNavItem.Deities,
         BottomNavItem.Statistics,
+        BottomNavItem.Notes,
     )
 
     Scaffold(

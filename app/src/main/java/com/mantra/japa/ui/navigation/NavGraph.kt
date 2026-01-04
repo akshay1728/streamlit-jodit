@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.mantra.japa.ui.screens.DeityScreen
 import com.mantra.japa.ui.screens.JapaScreen
 import com.mantra.japa.ui.screens.MantraScreen
+import com.mantra.japa.ui.screens.NotesScreen
 import com.mantra.japa.ui.screens.StatisticsScreen
 import com.mantra.japa.ui.viewmodel.MainViewModel
 
@@ -53,6 +54,9 @@ fun NavGraph(
         }
         composable("statistics") {
             StatisticsScreen(viewModel = viewModel)
+        }
+        composable("notes") {
+            NotesScreen(viewModel = viewModel)
         }
     }
 }

@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                     MantraDatabase::class.java, "mantra-database"
                 ).build()
             }
-            val viewModelFactory = ViewModelFactory(db.mantraDao(), db.deityDao(), db.japaEntryDao(), db.targetDao())
+            val viewModelFactory = ViewModelFactory(db.mantraDao(), db.deityDao(), db.japaEntryDao(), db.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]
         }
 
