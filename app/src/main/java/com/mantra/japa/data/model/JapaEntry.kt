@@ -2,6 +2,8 @@ package com.mantra.japa.data.model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
@@ -14,7 +16,8 @@ import java.util.Date
             childColumns = ["mantraId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["mantraId"])]
 )
 data class JapaEntry(
     @PrimaryKey(autoGenerate = true)
