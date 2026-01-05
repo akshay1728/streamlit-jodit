@@ -134,9 +134,9 @@ class MainViewModel(
             }
         }.filter { noteDetails ->
             val textFilterPassed = filter.isBlank() ||
-                    noteDetails.mantra.name.contains(filter, ignoreCase = true) ||
-                    noteDetails.deity.name.contains(filter, ignoreCase = true) ||
-                    noteDetails.note.text.contains(filter, ignoreCase = true)
+                    noteDetails.mantra.name.contains(other = filter, ignoreCase = true) ||
+                    noteDetails.deity.name.contains(other = filter, ignoreCase = true) ||
+                    noteDetails.note.text.contains(other = filter, ignoreCase = true)
 
             calendar.time = noteDetails.note.timestamp
             val noteYear = calendar.get(Calendar.YEAR)
