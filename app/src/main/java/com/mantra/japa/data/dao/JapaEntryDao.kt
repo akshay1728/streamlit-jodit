@@ -11,9 +11,9 @@ interface JapaEntryDao {
     @Insert
     suspend fun insert(japaEntry: JapaEntry)
 
-    @Query("SELECT * FROM japa_entries WHERE mantraId = :mantraId")
-    fun getJapaEntriesForMantra(mantraId: Long): Flow<List<JapaEntry>>
-
     @Query("SELECT * FROM japa_entries")
     fun getAllJapaEntries(): Flow<List<JapaEntry>>
+
+    @Query("SELECT * FROM japa_entries WHERE mantraId = :mantraId")
+    fun getJapaEntriesForMantra(mantraId: Long): Flow<List<JapaEntry>>
 }

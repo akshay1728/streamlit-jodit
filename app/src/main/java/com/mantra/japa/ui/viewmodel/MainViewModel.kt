@@ -167,3 +167,16 @@ data class NoteDetails(
     val mantra: Mantra,
     val deity: Deity
 )
+
+data class Statistics(
+    val mantra: Mantra,
+    val deity: Deity,
+    val totalMalas: Int,
+    val totalJapas: Int
+)
+
+data class DeityStatistics(
+    val deity: Deity,
+    val totalMalas: Int,
+    val totalJapas: Int
+)

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -20,8 +21,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mantra.japa.ui.navigation.NavGraph
 import com.mantra.japa.ui.viewmodel.MainViewModel
-
-import androidx.compose.material.icons.filled.Notes
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Mantras : BottomNavItem("mantra", Icons.Default.List, "Mantras")
