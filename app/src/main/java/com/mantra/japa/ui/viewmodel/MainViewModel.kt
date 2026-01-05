@@ -122,7 +122,17 @@ class MainViewModel(
         _notesFilter,
         _selectedYear,
         _selectedMonth
-    ) { notes, mantras, deities, filter, year, month ->
+    ) { flows ->
+        @Suppress("UNCHECKED_CAST")
+        val notes = flows[0] as List<Note>
+        @Suppress("UNCHECKED_CAST")
+        val mantras = flows[1] as List<Mantra>
+        @Suppress("UNCHECKED_CAST")
+        val deities = flows[2] as List<Deity>
+        val filter = flows[3] as String
+        val year = flows[4] as Int?
+        val month = flows[5] as Int?
+
         val calendar = Calendar.getInstance()
         notes.mapNotNull { note ->
             val mantra = mantras.find { it.id == note.mantraId }
