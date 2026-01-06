@@ -31,18 +31,17 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
 
     private var viewModel: MainViewModel? by mutableStateOf(null)
+    private lateinit var database: MantraDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            val db = withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 val callback = object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
-                        // This scope can't be a CoroutineScope from the parameter, so we use the activity's lifecycleScope
                         lifecycleScope.launch(Dispatchers.IO) {
-                            val database = (application as MantraJapaApplication).database
                             val deityDao = database.deityDao()
                             val mantraDao = database.mantraDao()
 
@@ -52,7 +51,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Room.databaseBuilder(
+                database = Room.databaseBuilder(
                     applicationContext,
                     MantraDatabase::class.java, "mantra-database"
                 )
@@ -60,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     .fallbackToDestructiveMigration()
                     .build()
             }
-            val viewModelFactory = ViewModelFactory(db.mantraDao(), db.deityDao(), db.japaEntryDao(), db.noteDao())
+            val viewModelFactory = ViewModelFactory(database.mantraDao(), database.deityDao(), database.japaEntryDao(), database.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]
         }
 
