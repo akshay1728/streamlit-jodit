@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
                 Room.databaseBuilder(
                     applicationContext,
                     MantraDatabase::class.java, "mantra-database"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
             }
             val viewModelFactory = ViewModelFactory(db.mantraDao(), db.deityDao(), db.japaEntryDao(), db.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]

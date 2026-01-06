@@ -12,7 +12,7 @@ import com.mantra.japa.data.model.JapaEntry
 import com.mantra.japa.data.model.Mantra
 import com.mantra.japa.data.model.Note
 
-@Database(entities = [Mantra::class, Deity::class, JapaEntry::class, Note::class], version = 1, exportSchema = false)
+@Database(entities = [Mantra::class, Deity::class, JapaEntry::class, Note::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MantraDatabase : RoomDatabase() {
     abstract fun mantraDao(): MantraDao
