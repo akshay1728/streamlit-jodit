@@ -47,6 +47,27 @@ fun MantraScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        if (mantras.isEmpty()) {
+            Text(text = stringResource(id = R.string.no_mantras_added_yet))
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(mantras) { mantra ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clickable { onNavigateToJapa(mantra.id) }
+                    ) {
+                        Text(
+                            text = mantra.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         if (deities.isEmpty()) {
             Text(text = stringResource(id = R.string.no_deities_added_yet))
         } else {
@@ -88,27 +109,6 @@ fun MantraScreen(
                 enabled = newMantraName.isNotBlank() && selectedDeityId != null
             ) {
                 Text(text = stringResource(id = R.string.add_mantra))
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        if (mantras.isEmpty()) {
-            Text(text = stringResource(id = R.string.no_mantras_added_yet))
-        } else {
-            LazyColumn {
-                items(mantras) { mantra ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable { onNavigateToJapa(mantra.id) }
-                    ) {
-                        Text(
-                            text = mantra.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
             }
         }
     }
