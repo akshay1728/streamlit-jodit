@@ -37,6 +37,26 @@ fun DeityScreen(viewModel: MainViewModel) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        if (deities.isEmpty()) {
+            Text(text = stringResource(id = R.string.no_deities_added_yet))
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(deities) { deity ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = deity.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         TextField(
             value = newDeityName,
             onValueChange = { newDeityName = it },
@@ -54,26 +74,6 @@ fun DeityScreen(viewModel: MainViewModel) {
             enabled = newDeityName.isNotBlank()
         ) {
             Text(text = stringResource(id = R.string.add_deity))
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        if (deities.isEmpty()) {
-            Text(text = stringResource(id = R.string.no_deities_added_yet))
-        } else {
-            LazyColumn {
-                items(deities) { deity ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = deity.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
-            }
         }
     }
 }

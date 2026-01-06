@@ -10,10 +10,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -24,26 +29,29 @@ import com.mantra.japa.ui.viewmodel.MainViewModel
 fun StatisticsScreen(viewModel: MainViewModel) {
     val statistics by viewModel.statistics.collectAsState()
     val deityStatistics by viewModel.deityStatistics.collectAsState()
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf(stringResource(id = R.string.mantras), stringResource(id = R.string.deities))
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        item {
-            Text(
-                text = stringResource(id = R.string.statistics),
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(text = title) }
+                )
+            }
         }
-        item {
-            Text(
-                text = stringResource(id = R.string.mantras),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+        when (selectedTabIndex) {
+            0 -> MantraStatisticsList(statistics)
+            1 -> DeityStatisticsList(deityStatistics)
         }
+    }
+}
+
+@Composable
+fun MantraStatisticsList(statistics: List<com.mantra.japa.ui.viewmodel.Statistics>) {
+    LazyColumn(modifier = Modifier.padding(16.dp)) {
         items(statistics) { stat ->
             Card(
                 modifier = Modifier
@@ -59,14 +67,12 @@ fun StatisticsScreen(viewModel: MainViewModel) {
                 }
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(id = R.string.deities),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
+    }
+}
+
+@Composable
+fun DeityStatisticsList(deityStatistics: List<com.mantra.japa.ui.viewmodel.DeityStatistics>) {
+    LazyColumn(modifier = Modifier.padding(16.dp)) {
         items(deityStatistics) { stat ->
             Card(
                 modifier = Modifier
