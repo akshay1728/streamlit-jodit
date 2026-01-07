@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DeityDao {
     @Insert
-    suspend fun insert(deity: Deity)
+    suspend fun insert(deity: Deity): Long
 
     @Query("SELECT * FROM deities")
     fun getAllDeities(): Flow<List<Deity>>
