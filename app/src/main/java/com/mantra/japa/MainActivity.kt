@@ -28,31 +28,26 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Provider
 
 class MainActivity : ComponentActivity() {
 
     private var viewModel: MainViewModel? by mutableStateOf(null)
     private lateinit var database: MantraDatabase
 
-    companion object {
-        @Volatile
-        private var INSTANCE: MantraDatabase? = null
-    }
-
     private class RsvpDatabaseCallback(
-        private val context: Context,
+        private val provider: Provider<MantraDatabase>,
         private val scope: CoroutineScope
     ) : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            INSTANCE?.let { database ->
-                scope.launch {
-                    val deityDao = database.deityDao()
-                    val mantraDao = database.mantraDao()
+            scope.launch {
+                val db = provider.get()
+                val deityDao = db.deityDao()
+                val mantraDao = db.mantraDao()
 
-                    val deityId = deityDao.insert(Deity(name = "Kaal Bhairav"))
-                    mantraDao.insert(Mantra(name = "Om Bhairavaaya Namah", deityId = deityId))
-                }
+                val deityId = deityDao.insert(Deity(name = "Kaal Bhairav"))
+                mantraDao.insert(Mantra(name = "Om Bhairavaaya Namah", deityId = deityId))
             }
         }
     }
@@ -62,14 +57,14 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
+                val provider = Provider<MantraDatabase> { database }
                 database = Room.databaseBuilder(
                     applicationContext,
                     MantraDatabase::class.java, "mantra-database"
                 )
-                    .addCallback(RsvpDatabaseCallback(applicationContext, this))
+                    .addCallback(RsvpDatabaseCallback(provider, this))
                     .fallbackToDestructiveMigration()
                     .build()
-                INSTANCE = database
             }
             val viewModelFactory = ViewModelFactory(database.mantraDao(), database.deityDao(), database.japaEntryDao(), database.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]
