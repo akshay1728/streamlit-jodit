@@ -11,7 +11,6 @@ import com.mantra.japa.data.model.DeityStatistics
 import com.mantra.japa.data.model.JapaEntry
 import com.mantra.japa.data.model.Mantra
 import com.mantra.japa.data.model.Note
-import com.mantra.japa.data.model.Statistics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine

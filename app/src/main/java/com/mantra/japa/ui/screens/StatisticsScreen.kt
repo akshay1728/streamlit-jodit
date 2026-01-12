@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
 import com.mantra.japa.ui.viewmodel.MainViewModel
+import com.mantra.japa.ui.viewmodel.Statistics
 
 @Composable
 fun StatisticsScreen(viewModel: MainViewModel) {
@@ -50,7 +51,7 @@ fun StatisticsScreen(viewModel: MainViewModel) {
 }
 
 @Composable
-fun MantraStatisticsList(statistics: List<com.mantra.japa.ui.viewmodel.Statistics>) {
+fun MantraStatisticsList(statistics: List<Statistics>) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
         items(statistics) { stat ->
             Card(
