@@ -7,7 +7,6 @@ import com.mantra.japa.data.dao.JapaEntryDao
 import com.mantra.japa.data.dao.MantraDao
 import com.mantra.japa.data.dao.NoteDao
 import com.mantra.japa.data.model.Deity
-import com.mantra.japa.data.model.DeityStatistics
 import com.mantra.japa.data.model.JapaEntry
 import com.mantra.japa.data.model.Mantra
 import com.mantra.japa.data.model.Note

@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
+import com.mantra.japa.ui.viewmodel.DeityStatistics
 import com.mantra.japa.ui.viewmodel.MainViewModel
 import com.mantra.japa.ui.viewmodel.Statistics
 
@@ -72,7 +73,7 @@ fun MantraStatisticsList(statistics: List<Statistics>) {
 }
 
 @Composable
-fun DeityStatisticsList(deityStatistics: List<com.mantra.japa.ui.viewmodel.DeityStatistics>) {
+fun DeityStatisticsList(deityStatistics: List<DeityStatistics>) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
         items(deityStatistics) { stat ->
             Card(

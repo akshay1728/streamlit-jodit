@@ -1,5 +1,6 @@
 package com.mantra.japa
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,31 +34,42 @@ class MainActivity : ComponentActivity() {
     private var viewModel: MainViewModel? by mutableStateOf(null)
     private lateinit var database: MantraDatabase
 
+    companion object {
+        @Volatile
+        private var INSTANCE: MantraDatabase? = null
+    }
+
+    private class RsvpDatabaseCallback(
+        private val context: Context,
+        private val scope: CoroutineScope
+    ) : RoomDatabase.Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            INSTANCE?.let { database ->
+                scope.launch {
+                    val deityDao = database.deityDao()
+                    val mantraDao = database.mantraDao()
+
+                    val deityId = deityDao.insert(Deity(name = "Kaal Bhairav"))
+                    mantraDao.insert(Mantra(name = "Om Bhairavaaya Namah", deityId = deityId))
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                val callback = object : RoomDatabase.Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        super.onCreate(db)
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            val deityDao = database.deityDao()
-                            val mantraDao = database.mantraDao()
-
-                            val deityId = deityDao.insert(Deity(name = "Kaal Bhairav"))
-                            mantraDao.insert(Mantra(name = "Om Bhairavaaya Namah", deityId = deityId))
-                        }
-                    }
-                }
-
                 database = Room.databaseBuilder(
                     applicationContext,
                     MantraDatabase::class.java, "mantra-database"
                 )
-                    .addCallback(callback)
+                    .addCallback(RsvpDatabaseCallback(applicationContext, this))
                     .fallbackToDestructiveMigration()
                     .build()
+                INSTANCE = database
             }
             val viewModelFactory = ViewModelFactory(database.mantraDao(), database.deityDao(), database.japaEntryDao(), database.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]
