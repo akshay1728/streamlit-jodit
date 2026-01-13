@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.Date
 
 @Entity(
     tableName = "mantras",
@@ -21,5 +22,6 @@ data class Mantra(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val deityId: Long
+    val deityId: Long,
+    val lastUpdated: Date? = null
 )

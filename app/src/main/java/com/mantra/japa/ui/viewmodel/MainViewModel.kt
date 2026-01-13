@@ -10,8 +10,10 @@ import com.mantra.japa.data.model.Deity
 import com.mantra.japa.data.model.JapaEntry
 import com.mantra.japa.data.model.Mantra
 import com.mantra.japa.data.model.Note
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,6 +26,9 @@ class MainViewModel(
     private val japaEntryDao: JapaEntryDao,
     private val noteDao: NoteDao
 ) : ViewModel() {
+
+    private val _saveEvents = MutableSharedFlow<String>()
+    val saveEvents = _saveEvents.asSharedFlow()
 
     val mantras = mantraDao.getAllMantras()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -95,12 +100,18 @@ class MainViewModel(
     fun addJapaEntry(mantraId: Long, malas: Int) {
         viewModelScope.launch {
             japaEntryDao.insert(JapaEntry(mantraId = mantraId, malas = malas, timestamp = Date()))
+            val mantra = mantraDao.getMantraById(mantraId)
+            if (mantra != null) {
+                mantraDao.update(mantra.copy(lastUpdated = Date()))
+            }
+            _saveEvents.emit("Japa counter updated")
         }
     }
 
     fun addNote(mantraId: Long, text: String) {
         viewModelScope.launch {
             noteDao.insert(Note(mantraId = mantraId, text = text, timestamp = Date()))
+            _saveEvents.emit("Note saved")
         }
     }
 
@@ -113,13 +124,16 @@ class MainViewModel(
     private val _selectedMonth = MutableStateFlow<Int?>(null)
     val selectedMonth = _selectedMonth
 
+    private val _selectedDeityId = MutableStateFlow<Long?>(null)
+    val selectedDeityId = _selectedDeityId
+
     val notes = combine(
         noteDao.getAllNotes(),
         mantras,
         deities,
         _notesFilter,
-        combine(_selectedYear, _selectedMonth) { year, month -> year to month }
-    ) { notes, mantras, deities, filter, (year, month) ->
+        combine(_selectedYear, _selectedMonth, _selectedDeityId) { year, month, deityId -> Triple(year, month, deityId) }
+    ) { notes, mantras, deities, filter, (year, month, deityId) ->
         val calendar = Calendar.getInstance()
         notes.mapNotNull { note ->
             val mantra = mantras.find { it.id == note.mantraId }
@@ -141,8 +155,9 @@ class MainViewModel(
 
             val yearFilterPassed = year == null || noteYear == year
             val monthFilterPassed = month == null || noteMonth == month
+            val deityFilterPassed = deityId == null || noteDetails.deity.id == deityId
 
-            textFilterPassed && yearFilterPassed && monthFilterPassed
+            textFilterPassed && yearFilterPassed && monthFilterPassed && deityFilterPassed
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -156,6 +171,10 @@ class MainViewModel(
 
     fun onMonthSelected(month: Int?) {
         _selectedMonth.value = month
+    }
+
+    fun onDeitySelected(deityId: Long?) {
+        _selectedDeityId.value = deityId
     }
 }
 

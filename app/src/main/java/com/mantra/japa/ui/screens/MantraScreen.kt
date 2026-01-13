@@ -29,6 +29,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
 import com.mantra.japa.ui.viewmodel.MainViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,11 +60,18 @@ fun MantraScreen(
                             .padding(vertical = 4.dp)
                             .clickable { onNavigateToJapa(mantra.id) }
                     ) {
-                        Text(
-                            text = mantra.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = mantra.name,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            mantra.lastUpdated?.let {
+                                Text(
+                                    text = "Last updated: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(it)}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 }
             }

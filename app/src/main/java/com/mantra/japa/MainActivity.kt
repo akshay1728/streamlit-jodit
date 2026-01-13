@@ -13,9 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mantra.japa.data.db.MantraDatabase
 import com.mantra.japa.data.model.Deity
 import com.mantra.japa.data.model.Mantra
@@ -34,35 +31,12 @@ class MainActivity : ComponentActivity() {
     private var viewModel: MainViewModel? by mutableStateOf(null)
     private lateinit var database: MantraDatabase
 
-    private class RsvpDatabaseCallback(
-        private val provider: () -> MantraDatabase,
-        private val scope: CoroutineScope
-    ) : RoomDatabase.Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
-            scope.launch {
-                val db = provider()
-                val deityDao = db.deityDao()
-                val mantraDao = db.mantraDao()
-
-                val deityId = deityDao.insert(Deity(name = "Kaal Bhairav"))
-                mantraDao.insert(Mantra(name = "Om Bhairavaaya Namah", deityId = deityId))
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                database = Room.databaseBuilder(
-                    applicationContext,
-                    MantraDatabase::class.java, "mantra-database"
-                )
-                    .addCallback(RsvpDatabaseCallback({ database }, this))
-                    .fallbackToDestructiveMigration()
-                    .build()
+                database = MantraDatabase.getDatabase(applicationContext)
             }
             val viewModelFactory = ViewModelFactory(database.mantraDao(), database.deityDao(), database.japaEntryDao(), database.noteDao())
             viewModel = ViewModelProvider(this@MainActivity, viewModelFactory)[MainViewModel::class.java]

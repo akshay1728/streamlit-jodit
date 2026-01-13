@@ -39,9 +39,12 @@ fun NotesScreen(viewModel: MainViewModel) {
     val filter by viewModel.notesFilter.collectAsState()
     val selectedYear by viewModel.selectedYear.collectAsState()
     val selectedMonth by viewModel.selectedMonth.collectAsState()
+    val selectedDeityId by viewModel.selectedDeityId.collectAsState()
+    val deities by viewModel.deities.collectAsState()
 
     var yearMenuExpanded by remember { mutableStateOf(false) }
     var monthMenuExpanded by remember { mutableStateOf(false) }
+    var deityMenuExpanded by remember { mutableStateOf(false) }
 
     val years = (2020..Calendar.getInstance().get(Calendar.YEAR)).toList()
     val months = (1..12).toList()
@@ -75,6 +78,30 @@ fun NotesScreen(viewModel: MainViewModel) {
                         onClick = {
                             viewModel.onYearSelected(year)
                             yearMenuExpanded = false
+                        }
+                    )
+                }
+            }
+            Button(onClick = { deityMenuExpanded = true }) {
+                Text(deities.find { it.id == selectedDeityId }?.name ?: stringResource(id = R.string.all_deities))
+            }
+            DropdownMenu(
+                expanded = deityMenuExpanded,
+                onDismissRequest = { deityMenuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(id = R.string.all_deities)) },
+                    onClick = {
+                        viewModel.onDeitySelected(null)
+                        deityMenuExpanded = false
+                    }
+                )
+                deities.forEach { deity ->
+                    DropdownMenuItem(
+                        text = { Text(deity.name) },
+                        onClick = {
+                            viewModel.onDeitySelected(deity.id)
+                            deityMenuExpanded = false
                         }
                     )
                 }
