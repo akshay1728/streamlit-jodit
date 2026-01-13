@@ -28,7 +28,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Provider
 
 class MainActivity : ComponentActivity() {
 
@@ -36,13 +35,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var database: MantraDatabase
 
     private class RsvpDatabaseCallback(
-        private val provider: Provider<MantraDatabase>,
+        private val provider: () -> MantraDatabase,
         private val scope: CoroutineScope
     ) : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
             scope.launch {
-                val db = provider.get()
+                val db = provider()
                 val deityDao = db.deityDao()
                 val mantraDao = db.mantraDao()
 
@@ -57,12 +56,11 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                val provider = Provider<MantraDatabase> { database }
                 database = Room.databaseBuilder(
                     applicationContext,
                     MantraDatabase::class.java, "mantra-database"
                 )
-                    .addCallback(RsvpDatabaseCallback(provider, this))
+                    .addCallback(RsvpDatabaseCallback({ database }, this))
                     .fallbackToDestructiveMigration()
                     .build()
             }
