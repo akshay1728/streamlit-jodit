@@ -118,9 +118,8 @@ class MainViewModel(
         mantras,
         deities,
         _notesFilter,
-        _selectedYear,
-        _selectedMonth
-    ) { notes, mantras, deities, filter, year, month ->
+        combine(_selectedYear, _selectedMonth) { year, month -> year to month }
+    ) { notes, mantras, deities, filter, (year, month) ->
         val calendar = Calendar.getInstance()
         notes.mapNotNull { note ->
             val mantra = mantras.find { it.id == note.mantraId }
