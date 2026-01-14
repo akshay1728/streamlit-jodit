@@ -74,4 +74,7 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
+    implementation 'com.itextpdf:itext7-core:7.1.16'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.68'
 }

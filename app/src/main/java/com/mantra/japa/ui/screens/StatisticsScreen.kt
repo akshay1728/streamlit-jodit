@@ -18,35 +18,60 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material3.Icon
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
 import com.mantra.japa.ui.viewmodel.DeityStatistics
 import com.mantra.japa.ui.viewmodel.MainViewModel
 import com.mantra.japa.ui.viewmodel.Statistics
+import com.mantra.japa.utils.PdfExporter
+import kotlinx.coroutines.launch
 
 @Composable
 fun StatisticsScreen(viewModel: MainViewModel) {
     val statistics by viewModel.statistics.collectAsState()
     val deityStatistics by viewModel.deityStatistics.collectAsState()
+    val notes by viewModel.notes.collectAsState()
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf(stringResource(id = R.string.mantras), stringResource(id = R.string.deities))
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = selectedTabIndex) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(text = title) }
-                )
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                scope.launch {
+                    PdfExporter().exportToPdf(context, statistics, deityStatistics, notes)
+                }
+            }) {
+                Icon(Icons.Default.PictureAsPdf, contentDescription = "Export to PDF")
             }
         }
-        when (selectedTabIndex) {
-            0 -> MantraStatisticsList(statistics)
-            1 -> DeityStatisticsList(deityStatistics)
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(text = title) }
+                    )
+                }
+            }
+            when (selectedTabIndex) {
+                0 -> MantraStatisticsList(statistics)
+                1 -> DeityStatisticsList(deityStatistics)
+            }
         }
     }
 }
