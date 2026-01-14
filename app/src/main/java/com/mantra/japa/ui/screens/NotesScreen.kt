@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
 import com.mantra.japa.ui.viewmodel.MainViewModel
+import com.mantra.japa.ui.viewmodel.NoteDetails
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
