@@ -176,6 +176,24 @@ class MainViewModel(
     fun onDeitySelected(deityId: Long?) {
         _selectedDeityId.value = deityId
     }
+
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            noteDao.delete(note)
+        }
+    }
+
+    fun deleteDeity(deity: Deity) {
+        viewModelScope.launch {
+            deityDao.delete(deity)
+        }
+    }
+
+    fun deleteMantra(mantra: Mantra) {
+        viewModelScope.launch {
+            mantraDao.delete(mantra)
+        }
+    }
 }
 
 data class NoteDetails(

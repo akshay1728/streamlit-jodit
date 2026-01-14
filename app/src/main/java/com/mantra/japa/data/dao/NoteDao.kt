@@ -1,6 +1,7 @@
 package com.mantra.japa.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.mantra.japa.data.model.Note
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 interface NoteDao {
     @Insert
     suspend fun insert(note: Note)
+
+    @Delete
+    suspend fun delete(note: Note)
 
     @Query("SELECT * FROM notes ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<Note>>

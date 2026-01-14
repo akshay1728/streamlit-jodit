@@ -29,9 +29,9 @@
     <string name="enter_your_note">Enter your note</string>
     <string name="cancel">Cancel</string>
     <string name="filter_notes">Filter notes</string>
-    <string name="select_year">Select Year</string>
+    <string name="select_year">Year</string>
     <string name="all_years">All Years</string>
-    <string name="select_month">Select Month</string>
+    <string name="select_month">Month</string>
     <string name="all_months">All Months</string>
     <string name="all_deities">All Deities</string>
     <string name="date_format">yyyy-MM-dd</string>

@@ -15,7 +15,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -28,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mantra.japa.R
+import com.mantra.japa.data.model.Mantra
 import com.mantra.japa.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -43,6 +49,7 @@ fun MantraScreen(
     var newMantraName by remember { mutableStateOf("") }
     var selectedDeityId by remember { mutableStateOf<Long?>(null) }
     var expanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf<Mantra?>(null) }
 
     Column(
         modifier = Modifier
@@ -58,23 +65,54 @@ fun MantraScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clickable { onNavigateToJapa(mantra.id) }
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = mantra.name,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            mantra.lastUpdated?.let {
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { onNavigateToJapa(mantra.id) }
+                            ) {
                                 Text(
-                                    text = "Last updated: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(it)}",
-                                    style = MaterialTheme.typography.bodySmall
+                                    text = mantra.name,
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
+                                mantra.lastUpdated?.let {
+                                    Text(
+                                        text = "Last updated: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(it)}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { showDeleteDialog = mantra }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Mantra")
                             }
                         }
                     }
                 }
             }
+        }
+
+        if (showDeleteDialog != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = null },
+                title = { Text("Delete Mantra") },
+                text = { Text("Are you sure you want to delete this mantra? This will also delete all associated japa entries and notes.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteMantra(showDeleteDialog!!)
+                            showDeleteDialog = null
+                        }
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showDeleteDialog = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
         if (deities.isEmpty()) {

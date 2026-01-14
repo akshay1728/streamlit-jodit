@@ -1,6 +1,7 @@
 package com.mantra.japa.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -14,6 +15,9 @@ interface MantraDao {
 
     @Update
     suspend fun update(mantra: Mantra)
+
+    @Delete
+    suspend fun delete(mantra: Mantra)
 
     @Query("SELECT * FROM mantras")
     fun getAllMantras(): Flow<List<Mantra>>

@@ -14,7 +14,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -45,6 +50,7 @@ fun NotesScreen(viewModel: MainViewModel) {
     var yearMenuExpanded by remember { mutableStateOf(false) }
     var monthMenuExpanded by remember { mutableStateOf(false) }
     var deityMenuExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf<NoteDetails?>(null) }
 
     val years = (2020..Calendar.getInstance().get(Calendar.YEAR)).toList()
     val months = (1..12).toList()
@@ -136,26 +142,54 @@ fun NotesScreen(viewModel: MainViewModel) {
         LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
             items(notes) { noteDetails ->
                 Card(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = noteDetails.mantra.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Text(
-                            text = noteDetails.deity.name,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = noteDetails.note.text,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = SimpleDateFormat(stringResource(id = R.string.date_format), Locale.getDefault()).format(noteDetails.note.timestamp),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    Row(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = noteDetails.mantra.name,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = noteDetails.deity.name,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = noteDetails.note.text,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = SimpleDateFormat(stringResource(id = R.string.date_format), Locale.getDefault()).format(noteDetails.note.timestamp),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        IconButton(onClick = { showDeleteDialog = noteDetails }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                        }
                     }
                 }
             }
+        }
+
+        if (showDeleteDialog != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = null },
+                title = { Text("Delete Note") },
+                text = { Text("Are you sure you want to delete this note?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteNote(showDeleteDialog!!.note)
+                            showDeleteDialog = null
+                        }
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showDeleteDialog = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
