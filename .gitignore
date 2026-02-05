@@ -1,0 +1,15 @@
+# Android Studio
+*.iml
+.gradle
+/local.properties
+.idea/
+.cxx/
+build/
+captures/
+
+# APKs
+*.apk
+*.aab
+*.ap_
+*.apks
+*.aab
